@@ -10,6 +10,7 @@ import {
     AppRegistry,
     Image,
     StyleSheet,
+    ListView,
     Text,
     View,
 } from 'react-native';
@@ -18,7 +19,10 @@ class HelloWorldReactNative extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            movies: null,
+            dataSource: new ListView.DataSource({
+                rowHasChanged: (row1, row2) => row1 !== row2,
+            }),
+            loaded: false,
         };
     }
 
@@ -31,18 +35,25 @@ class HelloWorldReactNative extends Component {
             .then((response) => response.json())
             .then((responseData) => {
                 this.setState({
-                    movies: responseData.movies,
+                    dataSource: this.state.dataSource.cloneWithRows(responseData.movies),
+                    loaded: true,
                 });
             })
             .done();
     }
+
     render() {
-        if (!this.state.movies) {
+        if (!this.state.loaded) {
             return this.renderLoadingView();
         }
 
-        var movie = this.state.movies[0];
-        return this.renderMovie(movie);
+        return (
+            <ListView
+                dataSource={this.state.dataSource}
+                renderRow={this.renderMovie}
+                style={styles.listView}
+            />
+        )
     }
 
     renderLoadingView() {
@@ -78,6 +89,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#F5FCFF',
+        marginTop: 5,
+        marginBottom: 5,
+        marginLeft: 10,
+        marginRight: 10,
     },
     rightContainer: {
         flex: 1,
@@ -85,12 +100,15 @@ const styles = StyleSheet.create({
     thumbnail: {
         width: 53,
         height: 81,
-        margin: 15,
     },
     title: {
         fontSize: 20,
         marginBottom: 8,
         textAlign: 'center',
+    },
+    listView: {
+        paddingTop: 20,
+        backgroundColor: '#F5FCFF',
     },
     year: {
         textAlign: 'center',
